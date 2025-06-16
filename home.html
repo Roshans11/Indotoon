@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Indotoon - Home</title>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js"></script>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; background: linear-gradient(to right, #1a1a2e, #16213e); color: white; margin: 0; padding: 0; }
+    header { background: #0f3460; padding: 1rem; display: flex; justify-content: space-between; align-items: center; }
+    header h1 { margin: 0; color: #e94560; }
+    button { background: #e94560; color: white; border: none; padding: 0.5rem 1rem; cursor: pointer; border-radius: 8px; }
+    main { padding: 1rem; }
+    #uploadSection { background: #1f4068; padding: 1rem; border-radius: 10px; margin-bottom: 1rem; }
+    .episodes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; }
+    .episode-box { background: #1f4068; padding: 1rem; border-radius: 10px; transition: 0.3s; }
+    .episode-box:hover { transform: scale(1.02); background: #324a7d; }
+    .episode-box video { width: 100%; border-radius: 10px; }
+    .actions { margin-top: 0.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); justify-content: center; align-items: center; z-index: 999; }
+    .modal video { width: 90vw; max-height: 90vh; border-radius: 10px; }
+    .comment-box { margin-top: 0.5rem; }
+    .comment-box input { width: 100%; padding: 0.5rem; border-radius: 5px; border: none; margin-bottom: 0.25rem; }
+    .comments-list { font-size: 0.85rem; max-height: 100px; overflow-y: auto; }
+    #searchBarContainer { margin: 1rem 0; text-align: center; display: flex; justify-content: center; align-items: center; gap: 0.5rem; }
+    #searchInput { width: 300px; padding: 0.5rem; border-radius: 8px; border: none; font-size: 1rem; }
+    #searchBtn { background: #e94560; color: white; border: none; padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Indotoon</h1>
+    <button onclick="logout()">Logout</button>
+  </header>
+
+  <main id="mainContent">
+    <section id="uploadSection" style="display:none">
+      <h2>Upload New Episode (Paste Video URL)</h2>
+      <input type="text" id="title" placeholder="Episode Title">
+      <input type="url" id="videoURL" placeholder="Cloudinary Video URL">
+      <button onclick="uploadEpisode()">Submit</button>
+      <p id="uploadMsg"></p>
+    </section>
+
+    <div id="searchBarContainer">
+      <input type="text" id="searchInput" placeholder="Search episodes by title..." />
+      <button id="searchBtn" onclick="filterEpisodes()">🔍</button>
+    </div>
+
+    <section id="episodesContainer" class="episodes-grid"></section>
+  </main>
+
+  <div id="playerModal" class="modal" onclick="closePlayer()">
+    <video id="fullPlayer" controls autoplay></video>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+    import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, updateDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAI3Y4Jbjo013rxoEekaDIQFdPNVjX66eE",
+      authDomain: "indotoon1.firebaseapp.com",
+      projectId: "indotoon1",
+      storageBucket: "indotoon1.firebasestorage.app",
+      messagingSenderId: "123244904427",
+      appId: "1:123244904427:web:46390fbb109d033ab1a3ae",
+      measurementId: "G-59N6G3QD68"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const uploadSection = document.getElementById("uploadSection");
+    const episodesContainer = document.getElementById("episodesContainer");
+    const fullPlayer = document.getElementById("fullPlayer");
+    const playerModal = document.getElementById("playerModal");
+    const searchInput = document.getElementById("searchInput");
+
+    let userEmail = "";
+    let allEpisodes = [];
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        location.href = "index.html";
+        return;
+      }
+      userEmail = user.email;
+      const role = user.displayName || localStorage.getItem("userRole");
+      if (role === "owner") {
+        uploadSection.style.display = "block";
+      }
+
+      const querySnapshot = await getDocs(collection(db, "episodes"));
+      querySnapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        data.id = docSnap.id;
+        allEpisodes.push(data);
+      });
+      renderEpisodes(allEpisodes);
+    });
+
+    window.uploadEpisode = async () => {
+      const title = document.getElementById("title").value;
+      const url = document.getElementById("videoURL").value;
+      if (!url || !title) return alert("Please enter a title and a video URL");
+
+      await addDoc(collection(db, "episodes"), { title, url, likes: 0, comments: [], likedUsers: [] });
+      document.getElementById("uploadMsg").textContent = "Uploaded! Reload to view.";
+    };
+
+    window.deleteEpisode = async (id) => {
+      await deleteDoc(doc(db, "episodes", id));
+      alert("Episode deleted. Reload to update.");
+    };
+
+    window.logout = () => {
+      signOut(auth);
+    };
+
+    window.playFull = (url) => {
+      fullPlayer.src = url;
+      playerModal.style.display = "flex";
+    };
+
+    window.closePlayer = () => {
+      fullPlayer.pause();
+      fullPlayer.src = "";
+      playerModal.style.display = "none";
+    };
+
+    window.toggleLike = async (id, alreadyLiked) => {
+      const episodeRef = doc(db, "episodes", id);
+      const episodeSnap = await getDocs(collection(db, "episodes"));
+      const docData = episodeSnap.docs.find(d => d.id === id).data();
+      const likedUsers = docData.likedUsers || [];
+      let newLikes = docData.likes || 0;
+
+      if (likedUsers.includes(userEmail)) {
+        newLikes = Math.max(0, newLikes - 1);
+        await updateDoc(episodeRef, { likes: newLikes, likedUsers: arrayRemove(userEmail) });
+      } else {
+        newLikes += 1;
+        await updateDoc(episodeRef, { likes: newLikes, likedUsers: arrayUnion(userEmail) });
+      }
+      alert("Like toggled. Reload to update.");
+    };
+
+    window.addComment = async (id) => {
+      const input = document.getElementById(`comment-${id}`);
+      const comment = input.value.trim();
+      if (!comment) return;
+      const episodeRef = doc(db, "episodes", id);
+      await updateDoc(episodeRef, { comments: arrayUnion(comment) });
+      alert("Comment added! Reload to see it.");
+    };
+
+    window.renderEpisodes = (episodes) => {
+      episodesContainer.innerHTML = "";
+      const role = localStorage.getItem("userRole");
+      episodes.forEach(data => {
+        const card = document.createElement("div");
+        card.className = "episode-box";
+        const comments = (data.comments || []).map(c => `<div>• ${c}</div>`).join('');
+        const isLiked = (data.likedUsers || []).includes(userEmail);
+        card.innerHTML = `
+          <h3>${data.title}</h3>
+          <video src="${data.url}" muted></video>
+          <div class="actions">
+            <button onclick="playFull('${data.url}')">▶️ Watch</button>
+            <button onclick="toggleLike('${data.id}', ${isLiked})">❤️ Like (${data.likes || 0})</button>
+            ${role === "owner" ? `<button onclick="deleteEpisode('${data.id}')">🗑 Delete</button>` : ""}
+          </div>
+          <div class="comment-box">
+            <input type="text" id="comment-${data.id}" placeholder="Add a comment...">
+            <button onclick="addComment('${data.id}')">Comment</button>
+            <div class="comments-list">${comments}</div>
+          </div>
+        `;
+        episodesContainer.appendChild(card);
+      });
+    };
+
+    window.filterEpisodes = () => {
+      const searchTerm = searchInput.value.toLowerCase();
+      const filtered = allEpisodes.filter(ep => ep.title.toLowerCase().includes(searchTerm));
+      renderEpisodes(filtered);
+    };
+  </script>
+</body>
+</html>
