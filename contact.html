@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Contact Us | Indotoon</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 20px;
+      background-color: #0f172a;
+      color: #e2e8f0;
+      line-height: 1.6;
+    }
+    h1 {
+      color: #f43f5e;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      background-color: #1e293b;
+      border: 1px solid #334155;
+      color: #e2e8f0;
+      border-radius: 4px;
+    }
+    button {
+      margin-top: 15px;
+      padding: 10px 20px;
+      background-color: #f43f5e;
+      border: none;
+      border-radius: 4px;
+      color: #fff;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #e11d48;
+    }
+    a {
+      color: #38bdf8;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>Contact Us</h1>
+  <p>We’d love to hear from you! Whether you have a question, feedback, or want to report an issue, reach out using the form below or contact us directly.</p>
+
+  <form action="#" method="POST">
+    <label for="name">Your Name</label>
+    <input type="text" id="name" name="name" required />
+
+    <label for="email">Your Email</label>
+    <input type="email" id="email" name="email" required />
+
+    <label for="message">Your Message</label>
+    <textarea id="message" name="message" rows="5" required></textarea>
+
+    <button type="submit">Send Message</button>
+  </form>
+
+  <h2>Other ways to contact us</h2>
+  <p>Email: <a href="mailto:support@indotoon.com">support@indotoon.com</a></p>
+  <p>Join us on <a href="#">Telegram</a> | <a href="#">Discord</a> | <a href="#">YouTube</a></p>
+
+</body>
+</html>
