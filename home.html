@@ -417,7 +417,51 @@ button {
       font-size: 1rem;
     }
   }
+.movie-list-container {
+      max-width: 500px;
+      margin: 10px auto;
+      text-align: center;
+    }
 
+    .movie-list-toggle {
+      background-color: #f43f5e;
+      color: #fff;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .movie-list-toggle:hover {
+      background-color: #e11d48;
+    }
+
+    .movie-list {
+      display: none;  /* hidden by default */
+      list-style: none;
+      padding: 0;
+      background-color: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      margin-top: 8px;
+      text-align: left;
+    }
+
+    .movie-list li {
+      padding: 6px 10px;
+      border-bottom: 1px solid #334155;
+      color: #fff;
+    }
+
+    .movie-list li:last-child {
+      border-bottom: none;
+    }
+
+    @media (max-width: 600px) {
+      .movie-list-container {
+        width: 90%;
+      }
+    }
 
 
 
@@ -443,7 +487,28 @@ button {
     <h1>Indotoon</h1>
     <div id="welcomeMsg"></div>
     <button onclick="logout()">Logout</button>
+    <div class="movie-list-container">
+      <p style="font-size: 0.9rem; color: #cbd5e1; margin-bottom: 6px;">
+  📌 See the names of uploaded movies here and search them to find your series.
+</p>
+
+    <button id="movieListToggle" class="movie-list-toggle">📂 Show / Hide Movie List</button>
+
+    <ul class="movie-list" id="movieList">
+      <li>Naruto Episode 1</li>
+      <li>One Piece Episode 10</li>
+      <li>Attack on Titan S1E1</li>
+      <li>Demon Slayer S2E5</li>
+    </ul>
+  </div>
+
+
+  
+</div>
   </header>
+  
+
+
 
   <main id="mainContent">
     <section id="uploadSection" style="display:none">
@@ -689,6 +754,16 @@ button {
   }
 };
 
+ 
+
+ document.getElementById("movieListToggle").addEventListener("click", function() {
+    const list = document.getElementById("movieList");
+    if (list.style.display === "none" || list.style.display === "") {
+      list.style.display = "block";
+    } else {
+      list.style.display = "none";
+    }
+  });
 
 
   </script>
