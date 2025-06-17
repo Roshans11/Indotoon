@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Sign Up -Indotoon</title>
+  <title>Sign Up - Indotoon</title>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js"></script>
@@ -25,7 +25,7 @@
       width: 350px;
       text-align: center;
     }
-    input, button {
+    input, select, button {
       width: 100%;
       padding: 0.75rem;
       margin: 0.5rem 0;
@@ -61,6 +61,16 @@
 <body>
   <div class="box">
     <h2>Sign Up to Indotoon</h2>
+    <input type="text" id="firstName" placeholder="First Name" />
+    <input type="text" id="lastName" placeholder="Last Name" />
+    <input type="number" id="age" placeholder="Age" min="1" />
+    <select id="gender">
+      <option value="">Select Gender</option>
+      <option value="Male">Male</option>
+      <option value="Female">Female</option>
+      <option value="Other">Other</option>
+    </select>
+    <input type="text" id="username" placeholder="Unique Username" />
     <input type="email" id="email" placeholder="Email" />
     <input type="password" id="password" placeholder="Password" />
     <button onclick="signup()">Sign Up</button>
@@ -75,7 +85,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
     import { getAuth, createUserWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
-    import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, query, where, getDocs, collection } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAI3Y4Jbjo013rxoEekaDIQFdPNVjX66eE",
@@ -92,16 +102,45 @@
     const db = getFirestore(app);
 
     window.signup = async () => {
-      const email = document.getElementById("email").value;
+      const firstName = document.getElementById("firstName").value.trim();
+      const lastName = document.getElementById("lastName").value.trim();
+      const age = document.getElementById("age").value.trim();
+      const gender = document.getElementById("gender").value;
+      const username = document.getElementById("username").value.trim();
+      const email = document.getElementById("email").value.trim();
       const password = document.getElementById("password").value;
       const message = document.getElementById("message");
-      const role = "user"; // Hardcoded for user only
+
+      if (!firstName || !lastName || !age || !gender || !username || !email || !password) {
+        message.textContent = "Please fill out all fields.";
+        return;
+      }
 
       try {
-        const userCred = await createUserWithEmailAndPassword(auth, email, password);
-        await updateProfile(userCred.user, { displayName: role });
-        await setDoc(doc(db, "users", userCred.user.uid), { role });
+        // Check if username is unique
+        const q = query(collection(db, "users"), where("username", "==", username));
+        const snapshot = await getDocs(q);
+        if (!snapshot.empty) {
+          message.textContent = "Username already taken. Please choose another.";
+          return;
+        }
 
+        // Create user
+        const userCred = await createUserWithEmailAndPassword(auth, email, password);
+        await updateProfile(userCred.user, { displayName: "user" });
+
+        // Save extra data
+        await setDoc(doc(db, "users", userCred.user.uid), {
+          firstName,
+          lastName,
+          age: parseInt(age),
+          gender,
+          username,
+          email,
+          role: "user"
+        });
+
+        message.style.color = "#99ff99";
         message.textContent = "Signup successful! Redirecting...";
         setTimeout(() => {
           window.location.href = "login.html";
