@@ -459,7 +459,11 @@ button {
       <button id="searchBtn" onclick="filterEpisodes()">🔍</button>
     </div>
 
-    <section id="episodesContainer" class="episodes-grid"></section>
+   <div id="noResults" style="display:none; text-align:center; color:#ffcccc; font-size:1.2rem; margin-top:1rem;">
+  No episodes found.
+</div>
+<section id="episodesContainer" class="episodes-grid"></section>
+
   </main>
 
   <script type="module">
@@ -576,27 +580,39 @@ button {
   fetchAndRenderEpisodes();
 };
 
-   window.renderEpisodes = (episodes) => {
+  window.renderEpisodes = (episodes, highlight = "") => {
   const container = document.getElementById("episodesContainer");
+  const noResults = document.getElementById("noResults");
   container.innerHTML = "";
+
+  if (episodes.length === 0) {
+    noResults.style.display = "block";
+    return;
+  } else {
+    noResults.style.display = "none";
+  }
+
   episodes.forEach(data => {
     const isLiked = (data.likedUsers || []).includes(userEmail);
     const commentsHtml = (data.comments || []).map(c => `<div>• <strong>${c.username}</strong>: ${c.text}</div>`).join("");
 
     const savedTimeKey = `videoTime_${data.url}`;
     const savedTime = parseFloat(localStorage.getItem(savedTimeKey)) || 0;
-    const durationText = savedTime > 0 ? `Continue at ${formatTime(savedTime)}` : '';
+
+    const highlightedTitle = highlight
+      ? data.title.replace(new RegExp(`(${highlight})`, 'gi'), '<mark style="background:#ff5e78; color:white;">$1</mark>')
+      : data.title;
 
     container.innerHTML += `
       <div class="episode-box">
-        <h3>${data.title}</h3>
+        <h3>${highlightedTitle}</h3>
         <video src="${data.url}" muted></video>
         <div class="actions">
-  <button onclick="playFull('${data.url}')">▶️ Watch</button>
-  ${savedTime > 0 ? `<button onclick="continueWatching('${data.url}')">⏩ Continue Watching (${formatTime(savedTime)})</button>` : ''}
-  <button onclick="toggleLike('${data.id}')">${isLiked ? '💔 Unlike' : '❤️ Like'} (${data.likes || 0})</button>
-  ${isOwner ? `<button onclick="deleteEpisode('${data.id}')">🗑️ Delete</button>` : ''}
-</div>
+          <button onclick="playFull('${data.url}')">▶️ Watch</button>
+         
+          <button onclick="toggleLike('${data.id}')">${isLiked ? '💔 Unlike' : '❤️ Like'} (${data.likes || 0})</button>
+          ${isOwner ? `<button onclick="deleteEpisode('${data.id}')">🗑️ Delete</button>` : ''}
+        </div>
 
         <div class="comment-box">
           <input type="text" id="comment-${data.id}" placeholder="Add a comment...">
@@ -607,27 +623,18 @@ button {
   });
 };
 
+
     window.logout = () => {
       signOut(auth);
     };
 
  window.playFull = (url) => {
-  const savedTimeKey = `videoTime_${url}`;
-  const savedTime = parseFloat(localStorage.getItem(savedTimeKey)) || 0;
-
   const video = document.createElement("video");
   video.src = url;
   video.controls = true;
   video.autoplay = true;
   video.style.width = "100%";
   video.style.height = "100%";
-
-  // Set saved time when metadata is loaded
-  video.addEventListener("loadedmetadata", () => {
-    if (savedTime < video.duration) {
-      video.currentTime = savedTime;
-    }
-  });
 
   const closeButton = document.createElement("button");
   closeButton.textContent = "❌ Close";
@@ -643,6 +650,7 @@ button {
   closeButton.style.cursor = "pointer";
   closeButton.style.zIndex = "10000";
 
+  // Wrapper div for fullscreen background
   const wrapper = document.createElement("div");
   wrapper.style.position = "fixed";
   wrapper.style.top = 0;
@@ -655,15 +663,14 @@ button {
   wrapper.appendChild(closeButton);
 
   closeButton.onclick = () => {
-    // Save the current time
-    localStorage.setItem(savedTimeKey, video.currentTime);
-    
+    // Exit fullscreen if active
     if (document.fullscreenElement) {
       document.exitFullscreen();
     }
     wrapper.remove();
   };
 
+  // Close if user clicks on background (not on video)
   wrapper.onclick = (e) => {
     if (e.target === wrapper) {
       closeButton.click();
@@ -672,6 +679,7 @@ button {
 
   document.body.appendChild(wrapper);
 
+  // Request fullscreen
   if (wrapper.requestFullscreen) {
     wrapper.requestFullscreen();
   } else if (wrapper.webkitRequestFullscreen) {
@@ -681,15 +689,6 @@ button {
   }
 };
 
-window.formatTime = (seconds) => {
-  const min = Math.floor(seconds / 60);
-  const sec = Math.floor(seconds % 60).toString().padStart(2, '0');
-  return `${min}:${sec}`;
-};
-
-window.continueWatching = (url) => {
-  playFull(url);
-};
 
 
   </script>
