@@ -6,55 +6,106 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
   <style>
     body {
-      background: linear-gradient(to right, #1a1a2e, #16213e);
+      margin: 0;
+      padding: 0;
       font-family: 'Segoe UI', sans-serif;
-      color: white;
+      background: linear-gradient(to right, #1a1a2e, #16213e);
+      color: #fff;
+      height: 100vh;
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
-      margin: 0;
+      background-image: url('https://i.pinimg.com/originals/80/c0/55/80c0552f5abef7b9dc9e113e297897ad.gif');
+      background-size: cover;
+      background-position: center;
     }
+
     .box {
-      background: #0f3460;
+      background-color: rgba(15, 52, 96, 0.9);
       padding: 2rem;
-      border-radius: 12px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.5);
-      width: 350px;
+      border-radius: 16px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.6);
+      width: 90%;
+      max-width: 400px;
       text-align: center;
+      backdrop-filter: blur(4px);
     }
+
+    .box h2 {
+      margin-bottom: 1rem;
+      color: #ff6b81;
+    }
+
     input, select, button {
       width: 100%;
       padding: 0.75rem;
       margin: 0.5rem 0;
-      border-radius: 6px;
+      border-radius: 8px;
       border: none;
+      font-size: 1rem;
     }
+
+    input, select {
+      background: #e3f2fd;
+      color: #333;
+    }
+
+    input:focus, select:focus {
+      outline: 2px solid #ff6b81;
+    }
+
     button {
       background: #e94560;
       color: white;
       font-weight: bold;
       cursor: pointer;
+      transition: background 0.3s ease, transform 0.2s;
     }
+
+    button:hover {
+      background: #ff2e4c;
+      transform: scale(1.03);
+    }
+
     .links {
       display: flex;
       justify-content: space-between;
-      font-size: 0.9rem;
+      flex-wrap: wrap;
+      font-size: 0.85rem;
       margin-top: 1rem;
     }
+
     .links a {
       color: #00c4ff;
       text-decoration: none;
+      margin: 0.3rem 0;
     }
+
     .links a:hover {
       text-decoration: underline;
     }
+
     #message {
-      margin-top: 0.5rem;
-      color: #ff9999;
+      margin-top: 0.8rem;
+      color: #ffaaaa;
       font-size: 0.9rem;
+      min-height: 20px;
+    }
+
+    @media (max-width: 500px) {
+      .box {
+        padding: 1.5rem;
+        width: 90%;
+      }
+
+      .links {
+        flex-direction: column;
+        align-items: center;
+        gap: 0.3rem;
+      }
     }
   </style>
 </head>
@@ -75,9 +126,9 @@
     <input type="password" id="password" placeholder="Password" />
     <button onclick="signup()">Sign Up</button>
     <div class="links">
-      <a href="login.html">Back to Login</a>
-      <a href="home.html">🏠 Home</a>
-      <a href="#" onclick="alert('Need help? Contact support@animeverse.com')">❓ Help</a>
+      <a href="login.html"><i class="fas fa-arrow-left"></i> Back to Login</a>
+      <a href="home.html"><i class="fas fa-home"></i> Home</a>
+      <a href="#" onclick="alert('Need help? Contact support@animeverse.com')"><i class="fas fa-question-circle"></i> Help</a>
     </div>
     <p id="message"></p>
   </div>
@@ -117,7 +168,6 @@
       }
 
       try {
-        // Check if username is unique
         const q = query(collection(db, "users"), where("username", "==", username));
         const snapshot = await getDocs(q);
         if (!snapshot.empty) {
@@ -125,11 +175,9 @@
           return;
         }
 
-        // Create user
         const userCred = await createUserWithEmailAndPassword(auth, email, password);
         await updateProfile(userCred.user, { displayName: "user" });
 
-        // Save extra data
         await setDoc(doc(db, "users", userCred.user.uid), {
           firstName,
           lastName,
