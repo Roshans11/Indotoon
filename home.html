@@ -682,7 +682,11 @@ button {
         <div class="comment-box">
           <input type="text" id="comment-${data.id}" placeholder="Add a comment...">
           <button onclick="addComment('${data.id}')">Comment</button>
-          <div class="comments-list">${commentsHtml}</div>
+          <button onclick="toggleComments('${data.id}')">💬 Show/Hide Comments</button>
+          <div id="comments-${data.id}" class="comments-list" style="display: none;">
+            ${commentsHtml}
+          </div>
+
         </div>
       </div>`;
   });
@@ -764,6 +768,14 @@ button {
       list.style.display = "none";
     }
   });
+  window.toggleComments = function(id) {
+  const box = document.getElementById(`comments-${id}`);
+  if (box.style.display === "none" || box.style.display === "") {
+    box.style.display = "block";
+  } else {
+    box.style.display = "none";
+  }
+};
 
 
   </script>
