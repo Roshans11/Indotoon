@@ -680,12 +680,12 @@ button {
         </div>
 
         <div class="comment-box">
-          <input type="text" id="comment-${data.id}" placeholder="Add a comment...">
-          <button onclick="addComment('${data.id}')">Comment</button>
-          <button onclick="toggleComments('${data.id}')">💬 Show/Hide Comments</button>
-          <div id="comments-${data.id}" class="comments-list" style="display: none;">
-            ${commentsHtml}
-          </div>
+      <input type="text" id="comment-${data.id}" placeholder="Add a comment...">
+      <button onclick="addComment('${data.id}')">Comment</button>
+      <button onclick="toggleComments('${data.id}')">💬 Show/Hide Comments</button>
+      <div id="comments-${data.id}" class="comments-list" style="display: none;">
+        ${commentsHtml}
+      </div>
 
         </div>
       </div>`;
